@@ -35,13 +35,17 @@ export function stageShot(G, name) {
     G.dayTime = 0.71; // golden hour over Altos del Faro
     // Mid-block on the avenue, lanes separated, traffic spaced so nothing piles up:
     // the player cruises south with the flow while a car comes the other way.
-    givePlayerCar(G, 2830, 300, Math.PI / 2, 'sport', '#ff7b3e', 235);
-    G.__cruise = true;
+    // Player at y 756 puts the camera top exactly on the street above, so the
+    // frame opens on road, not on buildings sliced by the top edge.
+    givePlayerCar(G, 2830, 756, Math.PI / 2, 'sport', '#ff7b3e', 0);
+    // No __cruise here: the car stays put so the camera holds exactly on the
+    // street above (camera top = the road, not sliced rooftops); the traffic
+    // around it keeps the frame alive.
     const civs = G.traffic.cars.filter((c) => c.driver === 'civ');
-    if (civs[0]) placeCivCar(G, civs[0], 2830, 565, Math.PI / 2, 150);
-    if (civs[1]) placeCivCar(G, civs[1], 2770, 720, -Math.PI / 2, 150);
-    if (civs[2]) placeCivCar(G, civs[2], 2830, 110, Math.PI / 2, 205);
-    if (civs[3]) placeCivCar(G, civs[3], 2770, 240, -Math.PI / 2, 170);
+    if (civs[0]) placeCivCar(G, civs[0], 2830, 1020, Math.PI / 2, 150);
+    if (civs[1]) placeCivCar(G, civs[1], 2770, 1120, -Math.PI / 2, 150);
+    if (civs[2]) placeCivCar(G, civs[2], 2830, 620, Math.PI / 2, 205);
+    if (civs[3]) placeCivCar(G, civs[3], 2770, 500, -Math.PI / 2, 170);
   } else if (name === 'mission') {
     G.dayTime = 0.44;
     P.x = 1752; P.y = 806; P.angle = 0.5;
@@ -50,16 +54,18 @@ export function stageShot(G, name) {
     G.hud.toast('Package collected — take it to Club Nébula');
   } else if (name === 'chase') {
     G.dayTime = 0.93; // night pursuit down the east avenue, cops in a V behind the player
-    givePlayerCar(G, 3470, 700, Math.PI / 2, 'sedan', '#c0c6ce', 380);
-    G.__cruise = true;
-    G.__holdBust = true;
+    // Player at y 820 puts the camera top in the middle of the street above, so the
+    // frame opens on road and the pursuit, not sliced rooftops. The car holds
+    // still and the cops close in from 200-300 px back — no __holdBust, so the
+    // bust meter starts at 0 and cannot fill before the capture.
+    givePlayerCar(G, 3470, 820, Math.PI / 2, 'sedan', '#c0c6ce', 0);
     G.police.setWanted(G, 4);
-    const spots = [[3470, 300, Math.PI / 2, 190], [3410, 225, Math.PI / 2 + 0.12, 190], [3532, 365, Math.PI / 2 - 0.18, 200]];
+    const spots = [[3470, 560, Math.PI / 2, 0], [3410, 510, Math.PI / 2 + 0.12, 0], [3532, 610, Math.PI / 2 - 0.18, 0]];
     for (const [x, y, a, s] of spots) {
       const cop = G.police.spawnCop(G);
       cop.x = x; cop.y = y; cop.angle = a; cop.speed = s;
     }
-    G.police.bust = 0.35;
+    G.police.bust = 0;
   } else if (name === 'beach') {
     G.dayTime = 0.4; // bright morning on Playa Serena
     P.x = 428; P.y = 852; P.angle = -0.7;

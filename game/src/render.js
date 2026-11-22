@@ -191,26 +191,78 @@ function drawProps(ctx, G, cam) {
   }
 }
 
+// Darken a #rrggbb colour by f (0..1). Used for parapets and roof edges.
+function shade(hex, f) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.max(0, Math.min(255, Math.round(((n >> 16) & 255) * f)));
+  const g = Math.max(0, Math.min(255, Math.round(((n >> 8) & 255) * f)));
+  const b = Math.max(0, Math.min(255, Math.round((n & 255) * f)));
+  return `rgb(${r},${g},${b})`;
+}
+
+// Deterministic per-building hash from its coordinates: rooftop props and
+// window skips never change between runs.
+function buildingHash(b) { return ((Math.round(b.x) * 31 + Math.round(b.y) * 17) % 100 + 100) % 100; }
+
 function drawBuildings(ctx, G, cam) {
   const night = G.daylight < 0.45;
   ctx.textAlign = 'center';
   for (const b of G.world.buildings) {
     if (!inView(cam, b.x + b.w / 2, b.y + b.h / 2, Math.max(b.w, b.h))) continue;
-    ctx.fillStyle = 'rgba(0,0,0,0.25)';
-    ctx.fillRect(b.x + 7, b.y + 9, b.w, b.h);
+    const h = buildingHash(b);
+    // Drop shadow, offset to the south-east so the block reads as raised.
+    ctx.fillStyle = 'rgba(0,0,0,0.30)';
+    ctx.fillRect(b.x + 9, b.y + 11, b.w, b.h);
+    // Wall band, then a roof set well inside it: the parapet edge between the
+    // two stops a block reading as one flat slab.
     ctx.fillStyle = b.wall;
     ctx.fillRect(b.x, b.y, b.w, b.h);
+    const rx = b.x + 14, ry = b.y + 14, rw = b.w - 28, rh = b.h - 28;
     ctx.fillStyle = b.roof;
-    ctx.fillRect(b.x + 6, b.y + 6, b.w - 12, b.h - 12);
-    // Window grid; windows glow after dark.
-    const cols = Math.max(2, Math.floor(b.w / 26));
+    ctx.fillRect(rx, ry, rw, rh);
+    ctx.strokeStyle = shade(b.roof, 0.62);
+    ctx.lineWidth = 2;
+    ctx.strokeRect(rx + 1, ry + 1, rw - 2, rh - 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(rx + 3.5, ry + 3.5, rw - 7, rh - 7);
+    // Window grid, sparser than before and with gaps: not every cell has a
+    // window, so the roof stops looking like a punched dot-grid.
+    const cols = Math.max(2, Math.floor(b.w / 34));
     const rows = Math.max(1, Math.min(5, b.floors));
     for (let cx = 0; cx < cols; cx++) for (let cy = 0; cy < rows; cy++) {
-      const wx = b.x + 12 + cx * ((b.w - 24) / cols);
-      const wy = b.y + 12 + cy * ((b.h - 24) / Math.max(1, rows));
+      if ((cx * 5 + cy * 7 + h) % 10 < 3) continue; // empty cell, deterministic
+      const wx = b.x + 20 + cx * ((b.w - 40) / cols);
+      const wy = b.y + 20 + cy * ((b.h - 40) / Math.max(1, rows));
       const lit = night && ((cx * 7 + cy * 13 + b.x) % 3 === 0);
       ctx.fillStyle = lit ? '#ffd76a' : 'rgba(38,64,96,0.55)';
-      ctx.fillRect(wx, wy, 8, 6);
+      ctx.fillRect(wx, wy, 7, 5);
+    }
+    // Rooftop props, placed from the building hash so they never move: AC
+    // units, a water tank on some roofs, a skylight on others.
+    const innerW = Math.max(1, rw - 40), innerH = Math.max(1, rh - 56);
+    const acCount = b.w > 110 && b.h > 110 ? 1 + (h % 3) : b.w > 90 ? 1 : 0;
+    for (let k = 0; k < acCount; k++) {
+      const ax = rx + 12 + ((h * 13 + k * 47) % innerW);
+      const ay = ry + 12 + ((h * 7 + k * 29) % innerH);
+      ctx.fillStyle = '#c8cdd2';
+      ctx.fillRect(ax, ay, 12, 9);
+      ctx.fillStyle = '#8a9096';
+      ctx.fillRect(ax, ay, 12, 3);
+    }
+    if (h % 4 === 0 && b.w > 110 && b.h > 110) {
+      ctx.fillStyle = '#7fa8c9';
+      ctx.beginPath(); ctx.arc(rx + rw - 24, ry + 24, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#5b7d99';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(rx + rw - 24, ry + 24, 8, 0, Math.PI * 2); ctx.stroke();
+    }
+    if (h % 5 < 2 && b.w > 130) {
+      ctx.fillStyle = 'rgba(191,227,239,0.9)';
+      ctx.fillRect(rx + rw / 2 - 9, ry + 10, 18, 12);
+      ctx.strokeStyle = 'rgba(90,125,153,0.8)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(rx + rw / 2 - 9, ry + 10, 18, 12);
     }
     // Shop sign on the south face.
     if (b.name && b.w > 92) {

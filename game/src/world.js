@@ -91,17 +91,37 @@ export function generateWorld(rng) {
         for (let px = x0 + 44; px < x1 - 40; px += 52) world.parkingSpots.push({ x: px, y: y0 + 40, angle: Math.PI / 2 });
         return;
       }
-      // Building block: split into a grid of lots, tight enough that blocks feel built-up.
+      // Building block: split into a grid of lots. Lots read as separate buildings,
+      // not one wall of slabs: wider sidewalk gaps between lots, and a varied mix —
+      // most lots hold a building, some hold a smaller one with a palm corner, and
+      // a few stay open as a palm lot, so the skyline breaks up.
       const cols = bw > 430 ? 3 : bw > 300 ? 2 : 1;
       const rows = bh > 430 ? 3 : bh > 300 ? 2 : 1;
       for (let cx = 0; cx < cols; cx++) {
         for (let cy = 0; cy < rows; cy++) {
-          const lx = x0 + 18 + (bw - 36) * (cx / cols);
-          const ly = y0 + 18 + (bh - 36) * (cy / rows);
-          const lw = (bw - 36) / cols - 10;
-          const lh = (bh - 36) / rows - 10;
+          const lx = x0 + 22 + (bw - 44) * (cx / cols);
+          const ly = y0 + 22 + (bh - 44) * (cy / rows);
+          const lw = (bw - 44) / cols - 14;
+          const lh = (bh - 44) / rows - 14;
           if (lw < 70 || lh < 70) continue;
           if (hitsReserved(lx, ly, lw, lh)) continue;
+          const lotRoll = rng.next();
+          if (lotRoll < 0.14) { // open palm lot: no building, palms and a bench instead
+            world.palms.push({ x: lx + lw * 0.3, y: ly + lh * 0.35, s: 1.1 });
+            world.palms.push({ x: lx + lw * 0.7, y: ly + lh * 0.65, s: 1 });
+            world.benches.push({ x: lx + lw * 0.45, y: ly + lh * 0.5 });
+            continue;
+          }
+          if (lotRoll < 0.34) { // small building in one corner, palm in the free corner
+            const sw = Math.floor(lw * 0.62), sh = Math.floor(lh * 0.62);
+            const corner = rng.int(0, 3);
+            const sx = corner % 2 === 0 ? lx : lx + lw - sw;
+            const sy = corner < 2 ? ly : ly + lh - sh;
+            const named = rng.chance(0.55);
+            addBuilding(sx, sy, sw, sh, { name: named ? SHOP_NAMES[shopIdx++ % SHOP_NAMES.length] : null });
+            world.palms.push({ x: lx + lw - (corner % 2 === 0 ? 18 : lw - 18), y: ly + lh - (corner < 2 ? 18 : lh - 18), s: 1 });
+            continue;
+          }
           const named = rng.chance(0.55);
           addBuilding(lx, ly, lw, lh, { name: named ? SHOP_NAMES[shopIdx++ % SHOP_NAMES.length] : null });
         }
