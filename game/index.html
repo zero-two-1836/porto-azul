@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Porto Azul — a sun-soaked open-world crime game</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="frame">
+  <canvas id="game" width="1280" height="800"></canvas>
+
+  <!-- In-game HUD -->
+  <div id="hud" class="hidden">
+    <div id="hud-top-left">
+      <div id="cash">$0</div>
+      <div id="clock">12:00</div>
+    </div>
+    <div id="hud-top-right">
+      <div id="stars" title="Wanted level"></div>
+      <div id="bust-wrap" class="hidden"><div id="bust-bar"></div><span>BUSTED?</span></div>
+    </div>
+    <div id="objective" class="hidden">
+      <div id="objective-title"></div>
+      <div id="objective-text"></div>
+      <div id="objective-timer" class="hidden"></div>
+    </div>
+    <div id="hud-bottom-left">
+      <div class="bar-row"><span class="bar-label">HP</span><div class="bar"><div id="health-bar"></div></div></div>
+      <div class="bar-row"><span class="bar-label">CAR</span><div class="bar"><div id="car-bar"></div></div></div>
+      <div id="weapon-line">FISTS · <span id="ammo">—</span></div>
+      <div id="speedo" class="hidden">0 km/h</div>
+    </div>
+    <div id="hud-bottom-right">
+      <canvas id="minimap" width="220" height="165"></canvas>
+      <div id="district">Playa Serena</div>
+    </div>
+    <div id="toast" class="hidden"></div>
+    <div id="banner" class="hidden">
+      <div id="banner-title"></div>
+      <div id="banner-sub"></div>
+    </div>
+    <div id="prompt" class="hidden"></div>
+  </div>
+
+  <!-- Title screen -->
+  <div id="title-screen">
+    <div id="title-art">
+      <div id="title-logo">PORTO&nbsp;AZUL</div>
+      <div id="title-sub">sol, sirenas y negocios sucios</div>
+      <div id="title-tag">An original open-world crime game in the fictional city of Porto Azul, state of Marisol.</div>
+    </div>
+    <div id="title-menu">
+      <button id="btn-new" class="menu-btn">NEW GAME</button>
+      <button id="btn-continue" class="menu-btn">CONTINUE</button>
+      <button id="btn-controls" class="menu-btn">CONTROLS</button>
+    </div>
+    <div id="controls-panel" class="hidden">
+      <h3>Controls</h3>
+      <p><b>W A S D / Arrows</b> — walk &amp; drive &nbsp;·&nbsp; <b>Shift</b> — sprint / handbrake</p>
+      <p><b>E</b> — enter / steal car, talk, buy, use &nbsp;·&nbsp; <b>Mouse</b> — aim &nbsp;·&nbsp; <b>Click</b> — punch / shoot</p>
+      <p><b>P / Esc</b> — pause &nbsp;·&nbsp; <b>M</b> — mute &nbsp;·&nbsp; <b>Enter</b> — confirm</p>
+      <p>Do the pink <b>◆</b> jobs for Marina, earn cash, and do not let the Policía Azul hold you still.</p>
+      <button id="btn-controls-back" class="menu-btn small">BACK</button>
+    </div>
+    <div id="title-foot">Keyboard &amp; mouse · Saves locally · An original game — no assets from any commercial title</div>
+  </div>
+
+  <!-- Pause / end screens -->
+  <div id="pause-screen" class="hidden overlay-screen">
+    <div class="overlay-title">PAUSED</div>
+    <div id="pause-stats"></div>
+    <button id="btn-resume" class="menu-btn">RESUME</button>
+    <button id="btn-save" class="menu-btn">SAVE AT SAFEHOUSE</button>
+    <button id="btn-quit-title" class="menu-btn">QUIT TO TITLE</button>
+  </div>
+  <div id="end-screen" class="hidden overlay-screen">
+    <div id="end-title" class="overlay-title">BUSTED</div>
+    <div id="end-sub"></div>
+    <button id="btn-respawn" class="menu-btn">CONTINUE</button>
+  </div>
+</div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
